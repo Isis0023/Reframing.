@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brainstorm — App de Mídia Social</title>
+<style>
+  @import url('data:text/css,');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0d0d0d;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 36px 36px;
+    color: #f0f0f0;
+  }
+
+  /* HEADER */
+  .board-header {
+    padding: 44px 60px 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    border-bottom: 1px solid #222;
+  }
+
+  .board-title {
+    font-size: 3rem;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    position: relative;
+  }
+
+  .board-title span {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #555;
+    margin-top: 8px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-family: 'Courier New', monospace;
+  }
+
+  .board-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #e63946, #f4a261);
+    border-radius: 2px;
+  }
+
+  .board-meta {
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: #444;
+    text-align: right;
+    line-height: 2;
+  }
+
+  /* CANVAS */
+  .canvas { padding: 40px 50px 80px; }
+
+  /* BIG IDEA */
+  .big-idea {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid #2a2a4a;
+    border-radius: 20px;
+    padding: 34px 40px;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .big-idea::before {
+    content: '💡';
+    position: absolute;
+    right: 36px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 6rem;
+    opacity: 0.06;
+  }
+
+  .big-idea::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #e63946, #f4a261, #e9c46a);
+    border-radius: 20px 20px 0 0;
+  }
+
+  .big-idea h2 {
+    font-size: 1.9rem;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+
+  .big-idea p {
+    font-size: 1.05rem;
+    color: #888;
+    max-width: 650px;
+    line-height: 1.7;
+  }
+
+  /* TAGS */
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+
+  .tag {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .tag-red    { background: rgba(230,57,70,0.15);   border: 1px solid #e63946; color: #e63946; }
+  .tag-orange { background: rgba(244,162,97,0.15);  border: 1px solid #f4a261; color: #f4a261; }
+  .tag-yellow { background: rgba(233,196,106,0.15); border: 1px solid #e9c46a; color: #e9c46a; }
+  .tag-green  { background: rgba(42,157,143,0.15);  border: 1px solid #2a9d8f; color: #2a9d8f; }
+  .tag-blue   { background: rgba(69,123,157,0.15);  border: 1px solid #457b9d; color: #457b9d; }
+  .tag-purple { background: rgba(150,100,220,0.15); border: 1px solid #9664dc; color: #9664dc; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: #444;
+    margin: 44px 0 22px 4px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, #2a2a2a, transparent);
+  }
+
+  /* CARDS */
+  .card {
+    background: #141414;
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 22px 24px;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: #333;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    z-index: 10;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .card-red::before    { background: #e63946; }
+  .card-orange::before { background: #f4a261; }
+  .card-yellow::before { background: #e9c46a; }
+  .card-green::before  { background: #2a9d8f; }
+  .card-blue::before   { background: #457b9d; }
+  .card-purple::before { background: #9664dc; }
+  .card-pink::before   { background: #e76f51; }
+  .card-teal::before   { background: #48cae4; }
+  .card-lime::before   { background: #80b918; }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .card ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+
+  .card ul li {
+    font-size: 0.88rem;
+    color: #777;
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.4;
+  }
+
+  .card ul li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: #444;
+    font-size: 1rem;
+  }
+
+  /* GRIDS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 18px; }
+
+  /* FLOW */
+  .flow-row {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 28px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    overflow-x: auto;
+    margin-bottom: 0;
+  }
+
+  .flow-step {
+    flex-shrink: 0;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 16px 18px;
+    text-align: center;
+    min-width: 120px;
+    transition: border-color 0.2s;
+  }
+
+  .flow-step:hover { border-color: #e63946; }
+  .flow-step.final { border-color: #2a9d8f; background: rgba(42,157,143,0.08); }
+
+  .step-icon { font-size: 1.5rem; margin-bottom: 6px; }
+  .step-num { font-family: 'Courier New', monospace; font-size: 0.6rem; color: #444; margin-bottom: 4px; }
+  .step-text { font-size: 0.82rem; font-weight: 700; color: #ccc; }
+
+  .flow-arrow { font-size: 1.2rem; color: #333; flex-shrink: 0; }
+
+  /* HIGHLIGHT BOX */
+  .highlight-box {
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .hb-red    { background: rgba(230,57,70,0.08);   border-left: 3px solid #e63946; color: #e63946; }
+  .hb-green  { background: rgba(42,157,143,0.08);  border-left: 3px solid #2a9d8f; color: #2a9d8f; }
+  .hb-blue   { background: rgba(69,123,157,0.08);  border-left: 3px solid #457b9d; color: #457b9d; }
+  .hb-yellow { background: rgba(233,196,106,0.08); border-left: 3px solid #e9c46a; color: #e9c46a; }
+
+  /* PRICING */
+  .price-card {
+    background: #141414;
+    border: 1px solid #222;
+    border-radius: 14px;
+    padding: 24px 20px;
+    text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .price-card:hover { transform: translateY(-4px); }
+  .price-card.highlight { border-color: #e63946; background: rgba(230,57,70,0.06); }
+
+  .plan { font-family: 'Courier New', monospace; font-size: 0.68rem; color: #555; margin-bottom: 8px; letter-spacing: 2px; text-transform: uppercase; }
+  .price { font-size: 2rem; font-weight: 900; color: #fff; letter-spacing: -1px; }
+  .period { font-family: 'Courier New', monospace; font-size: 0.68rem; color: #444; }
+  .desc { font-size: 0.82rem; color: #555; margin-top: 10px; line-height: 1.5; }
+  .divider { border: none; border-top: 1px solid #222; margin: 12px 0; }
+
+  /* STACK */
+  .stack-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+
+  .stack-item {
+    background: #141414;
+    border: 1px solid #222;
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .stack-item:hover { border-color: #333; }
+  .s-icon { font-size: 1.4rem; }
+  .s-name { font-size: 0.9rem; font-weight: 700; color: #ddd; }
+  .s-role { font-family: 'Courier New', monospace; font-size: 0.65rem; color: #555; margin-top: 2px; }
+
+  /* REDES */
+  .redes-box {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* PRÓXIMOS PASSOS */
+  .steps-box {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 28px;
+  }
+
+  /* ANIMATIONS */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: fadeUp 0.4s ease forwards;
+  }
+
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  .fade-in:nth-child(1) { animation-delay: 0.05s; }
+  .fade-in:nth-child(2) { animation-delay: 0.1s; }
+  .fade-in:nth-child(3) { animation-delay: 0.15s; }
+  .fade-in:nth-child(4) { animation-delay: 0.2s; }
+  .fade-in:nth-child(5) { animation-delay: 0.25s; }
+  .fade-in:nth-child(6) { animation-delay: 0.3s; }
+
+  @media (max-width: 900px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .board-header { flex-direction: column; gap: 16px; padding: 24px; }
+    .canvas { padding: 20px 20px 60px; }
+    .board-title { font-size: 2rem; }
+    .flow-row { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="board-header">
+  <div class="board-title">
+    📱 App de Mídia Social
+    <span>brainstorm · funcionalidades · visão do produto</span>
+  </div>
+  <div class="board-meta">
+    versão 1.0 · fev 2025<br>
+    status → 🔴 em progresso
+  </div>
+</div>
+
+<div class="canvas">
+
+  <!-- BIG IDEA -->
+  <div class="big-idea fade-in">
+    <h2>💡 A Grande Ideia</h2>
+    <p>Um super-app que transforma qualquer pessoa em um gestor profissional de mídias sociais — da criação com IA ao agendamento, análise e engajamento, tudo em um só lugar.</p>
+    <div class="tags">
+      <span class="tag tag-red">IA Generativa</span>
+      <span class="tag tag-orange">Automação</span>
+      <span class="tag tag-yellow">Social Media</span>
+      <span class="tag tag-green">Criação de Conteúdo</span>
+      <span class="tag tag-blue">Análise</span>
+      <span class="tag tag-purple">Engajamento</span>
+    </div>
+  </div>
+
+  <!-- PÚBLICO -->
+  <div class="section-title">👥 Público-Alvo</div>
+  <div class="grid-2" style="margin-bottom: 32px;">
+    <div class="card card-orange fade-in">
+      <div class="card-title">🧑‍💼 Profissionais</div>
+      <ul>
+        <li>Social media managers</li>
+        <li>Agências de marketing</li>
+        <li>Criadores de conteúdo</li>
+        <li>Gestores de tráfego pago</li>
+        <li>Influenciadores digitais</li>
+      </ul>
+    </div>
+    <div class="card card-blue fade-in">
+      <div class="card-title">🏪 Não-Profissionais</div>
+      <ul>
+        <li>Donos de pequenos negócios</li>
+        <li>Restaurantes, lojas, salões</li>
+        <li>Profissionais liberais</li>
+        <li>Autônomos e freelancers</li>
+        <li>Quem quer aprender do zero</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- FUNCIONALIDADES -->
+  <div class="section-title">🧩 Módulos & Funcionalidades</div>
+  <div class="grid-3" style="margin-bottom: 18px;">
+    <div class="card card-red fade-in">
+      <div class="card-title">📅 Agendamento</div>
+      <ul>
+        <li>Posta em todas as redes</li>
+        <li>Calendário visual mensal</li>
+        <li>Melhor horário por IA</li>
+        <li>Fila automática de posts</li>
+        <li>Repost de evergreen</li>
+        <li>Preview antes de publicar</li>
+      </ul>
+    </div>
+    <div class="card card-purple fade-in">
+      <div class="card-title">🤖 IA de Conteúdo</div>
+      <ul>
+        <li>Legenda + CTA + hashtags</li>
+        <li>Geração de imagens (IA)</li>
+        <li>Reels automáticos</li>
+        <li>Carrossel por tema</li>
+        <li>Stories animados</li>
+        <li>Threads para X/Twitter</li>
+      </ul>
+    </div>
+    <div class="card card-green fade-in">
+      <div class="card-title">🎨 Editor Visual</div>
+      <ul>
+        <li>Editor tipo Canva integrado</li>
+        <li>Templates por nicho</li>
+        <li>Paleta e fonte da marca</li>
+        <li>Redimensionamento auto</li>
+        <li>Banco de imagens stock</li>
+        <li>Upload de brand kit</li>
+      </ul>
+    </div>
+    <div class="card card-yellow fade-in">
+      <div class="card-title">💡 Sugestão de Pauta</div>
+      <ul>
+        <li>Datas comemorativas</li>
+        <li>Trending por nicho</li>
+        <li>"Ideia do dia" IA</li>
+        <li>Série de conteúdo</li>
+        <li>Análise de concorrentes</li>
+        <li>Banco de hooks/ganchos</li>
+      </ul>
+    </div>
+    <div class="card card-teal fade-in">
+      <div class="card-title">📊 Métricas</div>
+      <ul>
+        <li>Dashboard unificado</li>
+        <li>Alcance e engajamento</li>
+        <li>Melhor tipo de post</li>
+        <li>Crescimento de seguidores</li>
+        <li>Relatório PDF p/ cliente</li>
+        <li>Score de saúde do perfil</li>
+      </ul>
+    </div>
+    <div class="card card-lime fade-in">
+      <div class="card-title">💬 Engajamento</div>
+      <ul>
+        <li>Inbox unificado de DMs</li>
+        <li>Resposta automática IA</li>
+        <li>Atalhos de resposta</li>
+        <li>Filtro de spam/negativos</li>
+        <li>Salvar leads</li>
+        <li>Alertas de menção</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-bottom: 32px;">
+    <div class="card card-pink fade-in">
+      <div class="card-title">🏪 Pequenos Negócios</div>
+      <ul>
+        <li>Onboarding guiado por IA</li>
+        <li>Plano de conteúdo mensal</li>
+        <li>Post automático de produto</li>
+        <li>Posts de promoção c/ timer</li>
+        <li>Depoimentos → posts auto</li>
+      </ul>
+    </div>
+    <div class="card card-orange fade-in">
+      <div class="card-title">👥 Agência / Equipe</div>
+      <ul>
+        <li>Multi-contas de clientes</li>
+        <li>Fluxo de aprovação</li>
+        <li>Comentários internos</li>
+        <li>Perfis de acesso</li>
+        <li>Relatório de entregas</li>
+      </ul>
+    </div>
+    <div class="card card-blue fade-in">
+      <div class="card-title">💰 Monetização Criador</div>
+      <ul>
+        <li>Match com marcas parceiras</li>
+        <li>Mídia kit automático</li>
+        <li>Calculadora de preço</li>
+        <li>Gestão de contratos</li>
+        <li>Histórico de jobs</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- FLUXO -->
+  <div class="section-title">🗺️ Jornada do Usuário</div>
+  <div class="flow-row" style="margin-bottom: 32px;">
+    <div class="flow-step"><div class="step-icon">👋</div><div class="step-num">01</div><div class="step-text">Cadastro</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="step-icon">🧠</div><div class="step-num">02</div><div class="step-text">IA monta estratégia</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="step-icon">🔗</div><div class="step-num">03</div><div class="step-text">Conecta redes</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="step-icon">📆</div><div class="step-num">04</div><div class="step-text">Plano do mês</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="step-icon">✏️</div><div class="step-num">05</div><div class="step-text">Cria & aprova</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="step-icon">🚀</div><div class="step-num">06</div><div class="step-text">Agenda auto</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="step-icon">📊</div><div class="step-num">07</div><div class="step-text">Monitora</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step final"><div class="step-icon">🌱</div><div class="step-num">08</div><div class="step-text">Cresce!</div></div>
+  </div>
+
+  <!-- DIFERENCIAIS -->
+  <div class="section-title">🔥 Diferenciais Únicos</div>
+  <div class="grid-2" style="margin-bottom: 32px;">
+    <div class="card card-red fade-in">
+      <div class="card-title">⭐ O que ninguém tem</div>
+      <ul>
+        <li>🇧🇷 100% em português, foco BR</li>
+        <li>🗓️ Planejamento anual automático</li>
+        <li>🧠 IA aprende o tom de voz da marca</li>
+        <li>📱 App mobile p/ aprovar em qualquer lugar</li>
+        <li>🎤 Áudio → legenda de post automática</li>
+        <li>📸 Foto do produto → arte de post</li>
+        <li>🔥 Score de Viral antes de postar</li>
+      </ul>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div class="highlight-box hb-red">🇧🇷 <strong>Foco no mercado brasileiro</strong> — nenhum concorrente grande foi feito pensando no Brasil primeiro.</div>
+      <div class="highlight-box hb-green">🧠 <strong>IA que evolui com você</strong> — quanto mais usa, mais ela conhece sua marca e acerta no conteúdo.</div>
+      <div class="highlight-box hb-blue">🔥 <strong>Score de Viral</strong> — avalia o potencial de engajamento antes de publicar. Único no mercado.</div>
+    </div>
+  </div>
+
+  <!-- REDES -->
+  <div class="section-title">📡 Redes Suportadas</div>
+  <div class="redes-box" style="margin-bottom: 32px;">
+    <span class="tag tag-red">📸 Instagram</span>
+    <span class="tag tag-blue">💼 LinkedIn</span>
+    <span class="tag tag-green">🎵 TikTok</span>
+    <span class="tag tag-purple">📘 Facebook</span>
+    <span class="tag tag-blue">🐦 X / Twitter</span>
+    <span class="tag tag-orange">▶️ YouTube Shorts</span>
+    <span class="tag tag-red">📌 Pinterest</span>
+    <span class="tag tag-green">💬 WhatsApp Business</span>
+  </div>
+
+  <!-- MODELO DE NEGÓCIO -->
+  <div class="section-title">💸 Modelo de Negócio</div>
+  <div class="grid-4" style="margin-bottom: 32px;">
+    <div class="price-card fade-in">
+      <div class="plan">Grátis</div>
+      <div class="price">R$0</div>
+      <div class="period">/mês</div>
+      <hr class="divider">
+      <div class="desc">1 perfil · 10 posts/mês · Sem IA</div>
+    </div>
+    <div class="price-card highlight fade-in">
+      <div class="plan">⭐ Pro</div>
+      <div class="price">R$49</div>
+      <div class="period">/mês</div>
+      <hr class="divider">
+      <div class="desc">3 perfis · Posts ilimitados · IA completa</div>
+    </div>
+    <div class="price-card fade-in">
+      <div class="plan">Agência</div>
+      <div class="price">R$149</div>
+      <div class="period">/mês</div>
+      <hr class="divider">
+      <div class="desc">Clientes ilimitados · Relatórios · Aprovação</div>
+    </div>
+    <div class="price-card fade-in">
+      <div class="plan">Enterprise</div>
+      <div class="price">Custom</div>
+      <div class="period">/mês</div>
+      <hr class="divider">
+      <div class="desc">White-label · API · Suporte dedicado</div>
+    </div>
+  </div>
+
+  <!-- STACK -->
+  <div class="section-title">🛠️ Stack Técnica</div>
+  <div class="stack-grid" style="margin-bottom: 32px;">
+    <div class="stack-item"><span class="s-icon">⚛️</span><div><div class="s-name">React Native</div><div class="s-role">mobile app</div></div></div>
+    <div class="stack-item"><span class="s-icon">▲</span><div><div class="s-name">Next.js</div><div class="s-role">web app</div></div></div>
+    <div class="stack-item"><span class="s-icon">🧠</span><div><div class="s-name">Claude API</div><div class="s-role">IA de texto</div></div></div>
+    <div class="stack-item"><span class="s-icon">🎨</span><div><div class="s-name">Replicate</div><div class="s-role">IA de imagem</div></div></div>
+    <div class="stack-item"><span class="s-icon">🗄️</span><div><div class="s-name">Supabase</div><div class="s-role">auth + banco</div></div></div>
+    <div class="stack-item"><span class="s-icon">⚡</span><div><div class="s-name">Redis + Bull</div><div class="s-role">filas de post</div></div></div>
+    <div class="stack-item"><span class="s-icon">☁️</span><div><div class="s-name">Cloudflare R2</div><div class="s-role">storage</div></div></div>
+    <div class="stack-item"><span class="s-icon">🟢</span><div><div class="s-name">Node.js</div><div class="s-role">backend</div></div></div>
+  </div>
+
+  <!-- PRÓXIMOS PASSOS -->
+  <div class="section-title">🚀 Próximos Passos</div>
+  <div class="grid-3">
+    <div class="card card-red fade-in">
+      <div class="card-title">1️⃣ Agora</div>
+      <ul>
+        <li>Definir MVP mínimo</li>
+        <li>Escolher nicho piloto</li>
+        <li>Wireframes das telas</li>
+        <li>Validar com 10 usuários</li>
+      </ul>
+    </div>
+    <div class="card card-orange fade-in">
+      <div class="card-title">2️⃣ 1–3 meses</div>
+      <ul>
+        <li>Agendamento funcionando</li>
+        <li>IA de texto integrada</li>
+        <li>Instagram + LinkedIn</li>
+        <li>Beta com 50 usuários</li>
+      </ul>
+    </div>
+    <div class="card card-green fade-in">
+      <div class="card-title">3️⃣ 3–6 meses</div>
+      <ul>
+        <li>Editor visual completo</li>
+        <li>IA de imagem</li>
+        <li>Métricas e dashboard</li>
+        <li>Lançamento público 🚀</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
